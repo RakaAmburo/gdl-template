@@ -1,0 +1,235 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
+buildscript {
+  ext {
+    nexus_url = "${project.findProperty('nexus_url') ?: System.getenv('NEXUS_HOST')}"
+    nexus_user = "${project.findProperty('nexus_user') ?: System.getenv('NEXUS_USERNAME')}"
+    nexus_pw = "${project.findProperty('nexus_pw') ?: System.getenv('NEXUS_PASSWORD')}"
+    no_nexus = (project.findProperty('no_nexus') ?: System.getenv('NO_NEXUS') ?: false).toBoolean()
+    if (!no_nexus && (nexus_url == "null" || nexus_user == "null" || nexus_pw == "null")) {
+      throw new GradleException(
+          "property no_nexus='false' (or not defined) but at least one of the properties nexus_url, nexus_user or nexus_pw is not configured. Please configure those properties!")
+    }
+
+    def folderRel = (String) ("${project.findProperty('nexus_folder_releases') ?: System.getenv('NEXUS_FOLDER_RELEASES')}")
+    nexusFolderReleases = folderRel == "null" ? "maven-releases" : folderRel
+
+    def folderSnaps = (String) ("${project.findProperty('nexus_folder_snapshots') ?: System.getenv('NEXUS_FOLDER_SNAPSHOTS')}")
+    nexusFolderSnapshots = folderSnaps == "null" ? "maven-snapshots" : folderSnaps
+
+    snippetsDir = file('build/generated-snippets')
+  }
+}
+
+plugins {
+  id 'edp.jacoco-project-conventions'
+  id 'ods.maven-publish-conventions'
+  id 'ods.springboot-project-conventions'
+
+  id 'com.palantir.docker' version '0.30.0'
+  id 'com.palantir.docker-run' version '0.30.0'
+  id 'com.palantir.docker-compose' version '0.30.0'
+}
+
+group = 'com.bi.edp'
+version = '0.0.1-SNAPSHOT'
+
+javaProject {
+  mainClassName = 'com.bi.edp.ComponentCatalogApplication'
+}
+
+def microservices = ':microservices'
+
+dependencies {
+  implementation project("${microservices}:catalog")
+  implementation project("${microservices}:common")
+  implementation project("${microservices}:configuration_stack")
+  implementation project("${microservices}:controllers")
+  implementation project("${microservices}:location")
+  implementation project("${microservices}:notifications")
+  implementation project("${microservices}:provision_adapter")
+  implementation project("${microservices}:provisioning")
+  implementation project("${microservices}:provisioning_awx")
+  implementation project("${microservices}:provisioning_ods")
+  implementation project("${microservices}:security")
+  implementation project("${microservices}:statistics")
+}
+
+gradle.taskGraph.whenReady {graph ->
+  if (graph.hasTask(tasks.bootRun)) {
+    apply from: "$rootProject.projectDir.absolutePath/config-local.gradle"
+    if (rootProject.envVars) {
+      final javaExecRunConfiguration = { task -> task instanceof JavaExec && task.name == 'bootRun' }
+      tasks.matching (javaExecRunConfiguration).all {task ->
+        rootProject.envVars.each { envVar ->
+          task.environment envVar.key, envVar.value
+        }
+      }
+    }
+  }
+}
+
+/**********************************************************************/
+/*  Tailor keys                                                       */
+/**********************************************************************/
+
+task downloadTailorPrivateKey(type: Exec) {
+  apply from: 'config-local.gradle'
+
+  def user = rootProject.credentials.username
+  def pass = rootProject.credentials.password
+  def cluster = 'https://inh-ocdev.eu.boehringer.com:443'
+  def namespace = 'edpp-cd'
+  def secret = 'tailor-private-key'
+  def key = 'ssh-privatekey'
+  def outputFile = "${project.buildDir.absolutePath}/tmp/tailor/private.key"
+
+  inputs.dir("${project.projectDir.absolutePath}/support/oc-scripts")
+  outputs.file(outputFile)
+
+  if (DefaultNativePlatform.currentOperatingSystem.isWindows()) {
+    commandLine 'cmd', '/c', """PowerShell \
+                -File ${project.projectDir.absolutePath}/support/oc-scripts/ocSecretToFile.ps1 \
+                -cluster ${cluster} -username ${user} -password ${pass} \
+                -namespace ${namespace} -secretName ${secret} -secretEntry ${key} \
+                -outputFile ${outputFile}
+    """
+  } else {
+    commandLine 'sh', '-c',
+                """. ${project.projectDir.absolutePath}/support/oc-scripts/ocSecretToFile.sh \
+                -c ${cluster} -u ${user} -p ${pass} \
+                -n ${namespace} -s ${secret} -k ${key} -o ${outputFile}
+    """
+  }
+
+}
+
+/**********************************************************************/
+/*  Decrypt certificates                                              */
+/**********************************************************************/
+
+task decryptCertificate(type: Exec) {
+  dependsOn downloadTailorPrivateKey
+
+  def privateKeyFile = "${project.buildDir.absolutePath}/tmp/tailor/private.key"
+  def localEnvFile = "${project.projectDir.absolutePath}/openshift/edpp-local.env.enc"
+
+  if (DefaultNativePlatform.currentOperatingSystem.isWindows()) {
+    commandLine 'cmd', '/c',
+                "tailor secrets reveal --private-key=\"${privateKeyFile}\" ${localEnvFile}"
+  } else {
+    commandLine 'sh', '-c',
+                "tailor secrets reveal --private-key=\"${privateKeyFile}\" ${localEnvFile}"
+  }
+
+  standardOutput = new ByteArrayOutputStream()
+
+  doLast {
+    def secrets = [:]
+    standardOutput.toString().lines().forEach((String line) -> {
+      def var = line.split("=",2)
+      if (var.length == 2) {
+        secrets.put(var[0], var[1])
+      }
+    })
+    if (secrets.containsKey('AZURE_PRIVATE_KEY')) {
+      final javaExecRunConfiguration = { task -> task instanceof JavaExec && task.name == 'bootRun' }
+      tasks.matching (javaExecRunConfiguration).all {task ->
+        task.environment 'AZURE_APPLICATION_CERTIFICATE', secrets['AZURE_PRIVATE_KEY']
+      }
+    }
+  }
+}
+
+bootRun.dependsOn decryptCertificate
+/**********************************************************************/
+/*  PORT FORWARDER                                                    */
+/**********************************************************************/
+task startPortForward(type: Exec) {
+  apply from: 'config-local.gradle'
+
+  def user = rootProject.credentials.username
+  def pass = rootProject.credentials.password
+  def cluster = 'https://inh-ocdev.eu.boehringer.com:443'
+  def namespace = 'edpp-dev'
+  def service = 'mongodb'
+  def servicePort = '27017'
+  def localPort = rootProject.mongodb.port
+
+  commandLine 'cmd', '/c', """PowerShell -File support/startPortForward.ps1 \
+            -oc_cluster ${cluster} -namespace ${namespace} \
+            -username ${user} -password ${pass}  \
+            -service ${service} -service_port ${servicePort} -local_port ${localPort}
+  """
+}
+
+task stopPortForward(type: Exec) {
+  commandLine 'cmd', '/c', 'taskkill /IM "oc.exe" /F'
+}
+
+/**********************************************************************/
+/*  DATA LOADER                                                       */
+/**********************************************************************/
+configurations {
+  dataLoaderRuntime
+}
+
+sourceSets {
+  dataLoader {
+    groovy {
+      srcDir 'support/data/src/main/groovy'
+    }
+    resources {
+      srcDir 'support/data/src/main/resources'
+    }
+    compileClasspath += configurations.dataLoaderRuntime
+    runtimeClasspath += configurations.dataLoaderRuntime
+  }
+}
+
+dependencies {
+  dataLoaderRuntime 'org.apache.cxf:cxf-rt-frontend-jaxrs:3.3.0'
+  dataLoaderRuntime 'org.apache.httpcomponents:httpmime:4.5.9'
+  dataLoaderRuntime 'org.codehaus.groovy:groovy-all:3.0.9'
+  dataLoaderRuntime 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+}
+
+task loadData(dependsOn: 'dataLoaderClasses', type: JavaExec) {
+  group = 'application'
+  description = 'Load data into database'
+  apply from: 'config-local.gradle'
+
+  def user = rootProject.credentials.username
+  def pass = rootProject.credentials.password
+  def environment = 'local'
+  if (project.hasProperty('environment')) {
+    environment = project.environment
+  }
+
+  main = 'com.bi.edp.Main'
+  classpath = sourceSets.dataLoader.runtimeClasspath
+  args user, pass, environment
+}
+
+/**********************************************************************/
+/*  DOCKER PLUGIN                                                     */
+/**********************************************************************/
+docker {
+  name 'edpp-component-catalog:latest'
+  dockerfile file("$rootProject.projectDir.absolutePath/docker/Dockerfile.centos8")
+  files "$rootProject.projectDir.absolutePath/docker/app.jar"
+  copySpec.from("$rootProject.projectDir.absolutePath/docker/files").into("files")
+  pull true
+  noCache true
+}
+
+dockerCompose {
+  apply from: "$rootProject.projectDir.absolutePath/config-local.gradle"
+  dockerComposeFile "$rootProject.projectDir.absolutePath/docker/docker-compose.yml"
+}
+
+dockerRun {
+  name 'component-catalog'
+  image 'edpp-component-catalog:latest'
+  ports '8080:8080'
+}
