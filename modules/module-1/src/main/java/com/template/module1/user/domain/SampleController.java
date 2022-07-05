@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 public class SampleController {
 
-    RestTemplate restTemplate = new RestTemplate();
+    final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${module2.url}")
     private String url;
