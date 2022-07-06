@@ -27,11 +27,14 @@ public class WriteUserAdapter implements WriteUserPort {
 
     @Override
     public Optional<User> update(User user) {
-        return Optional.empty();
+
+        return userRepository.findById(user.getUserId().intValue()).map(saved -> userMapper.toJpaEntity(user, saved))
+            .map(userRepository::save).map(userMapper::toDomain);
+
     }
 
     @Override
     public void deleteById(UserId userId) {
-
+            userRepository.deleteById(userId.getValue());
     }
 }

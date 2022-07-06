@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 public class UserDtoMapper {
 
     User toDomainFromSaveBody(UserDto saveUserBodyDto) {
-        return User.builder()
-            .userId(UserId.of(null))
-            .fullName(FullName.of(saveUserBodyDto.getFirstName(), null, saveUserBodyDto.getLastName())).build();
+        return User.of(saveUserBodyDto.getFirstName(), saveUserBodyDto.getLastName());
+    }
+
+    User toDomainFromSaveBody(Integer id, UserDto saveUserBodyDto) {
+        return User.of(UserId.of(id), FullName.of(saveUserBodyDto.getFirstName(), null, saveUserBodyDto.getLastName()));
     }
 
     UserDto toDto(User user) {

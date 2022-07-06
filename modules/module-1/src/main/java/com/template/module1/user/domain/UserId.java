@@ -7,4 +7,12 @@ import lombok.Value;
 @Value(staticConstructor = "of")
 public class UserId {
     Integer value;
+
+    public static UserId of(){
+      return UserId.of(null);
+    }
+
+    public Integer intValue() {
+        return value;
+    }
 }

@@ -1,12 +1,16 @@
 package com.template.module1.user.domain;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.Value;
 
-@Builder
 @Getter
+@Value(staticConstructor = "of")
 public class User {
 
-    private final UserId userId;
-    private final FullName fullName;
+    UserId userId;
+    FullName fullName;
+
+    public static User of(String firstName, String lastName) {
+        return of(UserId.of(), FullName.of(firstName, null, lastName));
+    }
 }

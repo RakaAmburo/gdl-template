@@ -16,7 +16,13 @@ public class UserMapper {
     }
 
     User toDomain(UserData userData) {
-        return User.builder().userId(UserId.of(userData.getId()))
-            .fullName(FullName.of(userData.getFirstName(), null, userData.getLastName())).build();
+        return User.of(UserId.of(userData.getId()), FullName.of(userData.getFirstName(), null, userData.getLastName()));
+    }
+
+    UserData toJpaEntity(User user, UserData persistedUserData) {
+        return persistedUserData.toBuilder()
+            .firstName(user.getFullName().getFirstName())
+            .lastName(user.getFullName().getLastName())
+            .build();
     }
 }
