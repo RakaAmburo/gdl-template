@@ -1,4 +1,4 @@
-package com.template.module1.user.domain;
+package com.template.module1.user.adapter.entrypoint.web;
 
 import com.template.model.User;
 import java.util.Date;
