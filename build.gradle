@@ -14,9 +14,21 @@ configurations {
     }
 }
 
+tasks.named('bootRun') {
+    enabled = false
+}
+
+tasks.named('bootJar') {
+    enabled = false
+}
+
+gradle.buildFinished {
+    project.buildDir.deleteDir()
+}
+
 dependencies {
-    implementation project(':module-1')
-    implementation project(':module-2')
+    implementation project(':producer')
+    implementation project(':consumer')
     implementation project(':common')
 }
 
@@ -43,8 +55,22 @@ allprojects {
     }
 }
 
+def profile = 'rabbit' //rabbit or kafka
 subprojects {
+
+    bootRun {
+        systemProperty("spring.profiles.active", profile)
+    }
+
     dependencies {
+        implementation 'org.springframework.cloud:spring-cloud-stream'
+        if (profile == "rabbit") {
+            implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.2.4'
+        }
+        if (profile == "kafka") {
+            println "Cargamdp libreria"
+            implementation 'org.springframework.cloud:spring-cloud-stream-binder-kafka:3.2.4'
+        }
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'

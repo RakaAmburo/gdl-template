@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    stream:
+      function:
+        definition: loanConsumer;loanProcessed
+      bindings:
+        loanConsumer-in-0:
+          destination: output
+        loanProcessed-out-0:
+          destination: approved
+        loanDeclined-out-0:
+          destination: declined
