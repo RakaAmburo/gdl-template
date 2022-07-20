@@ -5,4 +5,8 @@ include 'module-2'
 project(':module-2').projectDir = new File('/modules/module-2')
 include 'common'
 project(':common').projectDir = new File('/modules/common')
+include 'providers'
+project(':providers').projectDir = new File('/modules/providers')
+include 'logger'
+project(':logger').projectDir = new File('/modules/logger')
 
