@@ -1,8 +1,8 @@
 rootProject.name = 'template'
-include 'module-1'
-project(':module-1').projectDir = new File('/modules/module-1')
-include 'module-2'
-project(':module-2').projectDir = new File('/modules/module-2')
+include 'gateway'
+project(':gateway').projectDir = new File('/modules/gateway')
+include 'core'
+project(':core').projectDir = new File('/modules/core')
 include 'common'
 project(':common').projectDir = new File('/modules/common')
 include 'providers'

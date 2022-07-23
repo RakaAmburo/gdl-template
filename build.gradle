@@ -15,9 +15,11 @@ configurations {
 }
 
 dependencies {
-    implementation project(':module-1')
-    implementation project(':module-2')
+    implementation project(':gateway')
+    implementation project(':core')
     implementation project(':common')
+    implementation project(':providers')
+    implementation project(':logger')
 }
 
 allprojects {
@@ -31,7 +33,7 @@ allprojects {
 
     dependencies {
         //implementation 'org.springframework.boot:spring-boot-starter'
-        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-webflux'
     }
 
     tasks.named('test') {
@@ -45,9 +47,11 @@ allprojects {
 
 subprojects {
     dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-rsocket'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'io.projectreactor:reactor-test'
     }
 }
 
