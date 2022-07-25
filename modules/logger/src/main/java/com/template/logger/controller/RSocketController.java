@@ -36,4 +36,10 @@ public class RSocketController {
 
     }
 
+    @MessageMapping("logger.provider.rate")
+    public void startLogs(Integer num) {
+        System.out.println("pasa por post");
+        restTemplate.postForEntity("http://localhost:8084/speed/" + num, null, String.class);
+
+    }
 }

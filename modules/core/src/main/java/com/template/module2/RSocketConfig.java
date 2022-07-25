@@ -21,9 +21,7 @@ public class RSocketConfig {
     @Bean
     public RSocketRequester getRSocketRequester(RSocketRequester.Builder builder){
         return builder
-                .rsocketConnector(rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(2, Duration.ofSeconds(2))))
-                //.dataMimeType(MediaType.APPLICATION_CBOR)
-
+                .rsocketConnector(rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(Integer.MAX_VALUE, Duration.ofSeconds(2))))
                 .transport(TcpClientTransport.create(6568));
     }
 

@@ -1,6 +1,8 @@
 package com.template.module1.rclient;
 
 import com.template.model.BankUser;
+import com.template.module1.controller.GatewayController;
+import io.rsocket.exceptions.ApplicationErrorException;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ public class rsocketClient {
             //Flux<Integer> bankUserId = Flux.range(1, 10000)
             .delayElements(Duration.ofMillis(10))
             .elapsed()
-            //.doOnNext(it -> System.out.println("I took " + it.getT1() + " MS"))
+            .doOnNext(it -> GatewayController.logs.tryEmitNext(it.getT1()))
             .map(Tuple2::getT2)
             .doOnNext(id -> System.out.println("Requested user: " + id));
 
@@ -41,7 +43,7 @@ public class rsocketClient {
             .route("core.process").data(bankUserId)
             .retrieveFlux(BankUser.class)
             .doOnError(error -> {
-                if (error instanceof ClosedChannelException) {
+                if (error instanceof ClosedChannelException || error instanceof ApplicationErrorException) {
                     Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
                         subcribed.dispose();
                         startFlow();

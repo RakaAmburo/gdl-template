@@ -40,22 +40,45 @@ public class LoggerController {
     @GetMapping("/start")
     public void start() {
 
+
+        startCoreFunc();
+
+        startProviderFunc();
+
+        startGateFunc();
+
+    }
+
+    private void startCoreFunc(){
         this.coreRequester
             .route("core.logger").retrieveFlux(Log.class)
+            .doOnError(error -> {
+                if (error instanceof ClosedChannelException) {
+                    Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
+                        startCoreFunc();
+                    }).subscribeOn(Schedulers.parallel()).subscribe();
+                }
+            })
             .doOnNext(n -> {
                 RSocketController.logs.tryEmitNext(n);
                 System.out.println("Receibed from core: " + n.getId());
             }).subscribe();
+    }
 
+    private void startProviderFunc(){
         this.providerRequester
             .route("provider.logger").retrieveFlux(Log.class)
+            .doOnError(error -> {
+                if (error instanceof ClosedChannelException) {
+                    Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
+                        startProviderFunc();
+                    }).subscribeOn(Schedulers.parallel()).subscribe();
+                }
+            })
             .doOnNext(n -> {
                 RSocketController.logs.tryEmitNext(n);
                 System.out.println("Receibed from provider: " + n.getId());
             }).subscribe();
-
-        startGateFunc();
-
     }
 
     private void startGateFunc() {

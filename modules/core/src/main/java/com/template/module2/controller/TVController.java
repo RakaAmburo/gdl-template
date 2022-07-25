@@ -2,6 +2,7 @@ package com.template.module2.controller;
 
 import com.template.model.BankUser;
 import com.template.model.Log;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.Many;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 @Controller

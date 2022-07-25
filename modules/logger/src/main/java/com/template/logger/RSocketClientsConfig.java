@@ -15,8 +15,7 @@ public class RSocketClientsConfig {
     public RSocketRequester getRSocketCoreLoggerRequester(RSocketRequester.Builder builder) {
         return builder
             .rsocketConnector(
-                rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(30, Duration.ofSeconds(2))))
-            //.dataMimeType(MediaType.JS.APPLICATION_CBOR)
+                rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(Integer.MAX_VALUE, Duration.ofSeconds(2))))
             .transport(TcpClientTransport.create(6565));
     }
 
@@ -24,8 +23,7 @@ public class RSocketClientsConfig {
     public RSocketRequester getRSocketProviderLoggerRequester(RSocketRequester.Builder builder) {
         return builder
             .rsocketConnector(
-                rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(2, Duration.ofSeconds(2))))
-            //.dataMimeType(MediaType.APPLICATION_CBOR)
+                rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(Integer.MAX_VALUE, Duration.ofSeconds(2))))
             .transport(TcpClientTransport.create(6568));
     }
 
@@ -34,9 +32,8 @@ public class RSocketClientsConfig {
         return builder
             .rsocketConnector(rSocketConnector -> rSocketConnector.reconnect(Retry.fixedDelay(Integer.MAX_VALUE, Duration.ofSeconds(2))
                 .doBeforeRetry(c -> {
-                    System.out.println("trying to reconect");
+                    //System.out.println("trying to reconect");
                 })))
-            //.dataMimeType(MediaType.APPLICATION_CBOR)
             .transport(TcpClientTransport.create(6566)) ;
     }
 
