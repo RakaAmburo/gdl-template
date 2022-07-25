@@ -55,3 +55,21 @@ subprojects {
     }
 }
 
+tasks.register('1-runGateway') {
+    group 'application'
+    dependsOn ':gateway:bootRun'
+}
+tasks.register('2-runCore') {
+    group 'application'
+    dependsOn ':core:bootRun'
+}
+tasks.register('3-runProviders') {
+    group 'application'
+    dependsOn ':providers:bootRun'
+}
+tasks.register('4-runLogger') {
+    group 'application'
+    dependsOn ':logger:bootRun'
+}
+
+
