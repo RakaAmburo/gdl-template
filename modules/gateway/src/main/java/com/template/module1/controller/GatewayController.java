@@ -19,6 +19,10 @@ public class GatewayController {
     public static Many<Long> logs;
     private static Flux<Long> logsFlux;
 
+    /**
+     * Adding javadoc
+     * @return
+     */
     @MessageMapping("gateway.logger")
     public Flux<Log> playMovie() {
 
