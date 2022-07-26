@@ -1,10 +1,7 @@
-package com.template.module1.user.domain;
+package com.template.gateway.user.domain;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-
 
 class FullNameTests {
 

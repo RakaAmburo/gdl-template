@@ -1,8 +1,6 @@
 package com.template.logger.controller;
 
 import com.template.model.Log;
-import io.rsocket.Payload;
-import java.time.Duration;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;

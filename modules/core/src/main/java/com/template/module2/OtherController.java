@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OtherController {
 
     @GetMapping("/module2/test")
-    public User controller(){
+    public User controller() {
 
         return User.builder().id(1).name("pepe").build();
     }

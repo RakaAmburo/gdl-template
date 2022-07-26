@@ -1,4 +1,4 @@
-package com.template.module1.user.domain;
+package com.template.gateway.user.domain;
 
 import lombok.Getter;
 
