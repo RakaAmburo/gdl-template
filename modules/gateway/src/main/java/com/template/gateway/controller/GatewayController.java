@@ -1,6 +1,7 @@
 package com.template.gateway.controller;
 
 import com.template.model.Log;
+import com.template.utils.FluxLogger;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
