@@ -22,7 +22,9 @@ public class GatewayController {
   public Flux<Log> gatewayLogger() {
 
     return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
-        .map(list -> Log.builder().id(1L).origin("gateway").type("rate").rate(list.size()).build());
+        .map(list -> Log.builder()
+            .id(1L).origin("gateway")
+            .type("rate").rate(list.size()).build());
   }
 
 }
