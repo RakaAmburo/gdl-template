@@ -34,7 +34,7 @@ public class ProviderController {
     return timer.delayFlux(bankUserFlux)
         .elapsed().doOnNext(it -> fluxLogger.emit(it.getT1()))
         .map(Tuple2::getT2)
-        .doOnComplete(() -> timer.stop());
+        .doOnComplete(timer::stop);
   }
 
   @MessageMapping("provider.logger")

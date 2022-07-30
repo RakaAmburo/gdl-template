@@ -27,19 +27,17 @@ public class TVController {
   public Flux<BankUser> playMovie(Flux<Integer> userId) {
 
     Flux<BankUser> bankUser =
-        userId.map(id -> BankUser.builder().index(id).build()).doOnNext(user -> {
-          System.out.println("enviando a prov " + user.getIndex());
-        }).elapsed().doOnNext(it -> {
-          System.out.println("I took " + it.getT1() + " MS");
-          fluxLogger.emit(it.getT1());
-        })
+        userId.map(id -> BankUser.builder().index(id).build())
+            .doOnNext(user -> System.out.println("enviando a prov " + user.getIndex())).elapsed()
+            .doOnNext(it -> {
+              System.out.println("I took " + it.getT1() + " MS");
+              fluxLogger.emit(it.getT1());
+            })
             .map(Tuple2::getT2);
 
     return this.rSocketRequester
         .route("to.providers").data(bankUser).retrieveFlux(BankUser.class)
-        .doOnNext(user -> {
-          System.out.println("Receibed " + user.getIndex());
-        });
+        .doOnNext(user -> System.out.println("Receibed " + user.getIndex()));
   }
 
   @MessageMapping("core.logger")

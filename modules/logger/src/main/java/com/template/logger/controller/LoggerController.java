@@ -1,6 +1,9 @@
 package com.template.logger.controller;
 
 import com.template.model.Log;
+import java.nio.channels.ClosedChannelException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -9,85 +12,75 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.nio.channels.ClosedChannelException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
 @RestController
 public class LoggerController {
 
-    @Autowired
-    @Qualifier("coreLoggerRequester")
-    private RSocketRequester coreRequester;
+  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  @Autowired
+  @Qualifier("coreLoggerRequester")
+  private RSocketRequester coreRequester;
+  @Autowired
+  @Qualifier("providerLoggerRequester")
+  private RSocketRequester providerRequester;
 
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  @Autowired
+  @Qualifier("gatewayLoggerRequester")
+  private RSocketRequester gatewayRequester;
 
-    @Autowired
-    @Qualifier("providerLoggerRequester")
-    private RSocketRequester providerRequester;
+  @GetMapping("/start")
+  public void start() {
 
-    @Autowired
-    @Qualifier("gatewayLoggerRequester")
-    private RSocketRequester gatewayRequester;
+    startCoreFunc();
 
-    @GetMapping("/start")
-    public void start() {
+    startProviderFunc();
 
+    startGateFunc();
 
-        startCoreFunc();
+  }
 
-        startProviderFunc();
+  private void startCoreFunc() {
+    this.coreRequester
+        .route("core.logger").retrieveFlux(Log.class)
+        .doOnError(error -> {
+          if (error instanceof ClosedChannelException) {
+            Flux.just(Integer.MIN_VALUE).doOnNext(i -> startCoreFunc())
+                .subscribeOn(Schedulers.parallel()).subscribe();
+          }
+        })
+        .doOnNext(n -> {
+          RSocketController.logs.tryEmitNext(n);
+          System.out.println("Receibed from core: " + n.getId());
+        }).subscribe();
+  }
 
-        startGateFunc();
+  private void startProviderFunc() {
+    this.providerRequester
+        .route("provider.logger").retrieveFlux(Log.class)
+        .doOnError(error -> {
+          if (error instanceof ClosedChannelException) {
+            Flux.just(Integer.MIN_VALUE).doOnNext(i -> startProviderFunc())
+                .subscribeOn(Schedulers.parallel()).subscribe();
+          }
+        })
+        .doOnNext(n -> {
+          RSocketController.logs.tryEmitNext(n);
+          System.out.println("Receibed from provider: " + n.getId());
+        }).subscribe();
+  }
 
-    }
-
-    private void startCoreFunc() {
-        this.coreRequester
-                .route("core.logger").retrieveFlux(Log.class)
-                .doOnError(error -> {
-                    if (error instanceof ClosedChannelException) {
-                        Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
-                            startCoreFunc();
-                        }).subscribeOn(Schedulers.parallel()).subscribe();
-                    }
-                })
-                .doOnNext(n -> {
-                    RSocketController.logs.tryEmitNext(n);
-                    System.out.println("Receibed from core: " + n.getId());
-                }).subscribe();
-    }
-
-    private void startProviderFunc() {
-        this.providerRequester
-                .route("provider.logger").retrieveFlux(Log.class)
-                .doOnError(error -> {
-                    if (error instanceof ClosedChannelException) {
-                        Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
-                            startProviderFunc();
-                        }).subscribeOn(Schedulers.parallel()).subscribe();
-                    }
-                })
-                .doOnNext(n -> {
-                    RSocketController.logs.tryEmitNext(n);
-                    System.out.println("Receibed from provider: " + n.getId());
-                }).subscribe();
-    }
-
-    private void startGateFunc() {
-        this.gatewayRequester
-                .route("gateway.logger").retrieveFlux(Log.class)
-                .doOnError(error -> {
-                    if (error instanceof ClosedChannelException) {
-                        Flux.just(Integer.MIN_VALUE).doOnNext(i -> {
-                            startGateFunc();
-                        }).subscribeOn(Schedulers.parallel()).subscribe();
-                    }
-                })
-                .doOnNext(n -> {
-                    RSocketController.logs.tryEmitNext(n);
-                    System.out.println("Receibed from gateway: " + n.getId());
-                }).subscribe();
-    }
+  private void startGateFunc() {
+    this.gatewayRequester
+        .route("gateway.logger").retrieveFlux(Log.class)
+        .doOnError(error -> {
+          if (error instanceof ClosedChannelException) {
+            Flux.just(Integer.MIN_VALUE).doOnNext(i -> startGateFunc())
+                .subscribeOn(Schedulers.parallel()).subscribe();
+          }
+        })
+        .doOnNext(n -> {
+          RSocketController.logs.tryEmitNext(n);
+          System.out.println("Receibed from gateway: " + n.getId());
+        }).subscribe();
+  }
 
 }

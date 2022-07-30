@@ -11,33 +11,33 @@ import reactor.core.publisher.Sinks.Many;
 @Controller
 public class RSocketController {
 
-    public static Many<Log> logs = Sinks.many().multicast().directBestEffort();
-    private RestTemplate restTemplate = new RestTemplate();
+  public static final Many<Log> logs = Sinks.many().multicast().directBestEffort();
+  private final RestTemplate restTemplate = new RestTemplate();
 
-    @MessageMapping("logger.stream")
-    public Flux<Log> responseStream() {
+  @MessageMapping("logger.stream")
+  public Flux<Log> responseStream() {
 
-        return logs.asFlux();
-    }
+    return logs.asFlux();
+  }
 
-    @MessageMapping("logger.start.flow")
-    public void startFlow(Boolean bol) {
+  @MessageMapping("logger.start.flow")
+  public void startFlow(Boolean bol) {
 
-        restTemplate.getForEntity("http://localhost:8080/start", String.class);
+    restTemplate.getForEntity("http://localhost:8080/start", String.class);
 
-    }
+  }
 
-    @MessageMapping("logger.start.logs")
-    public void startLogs(Boolean bol) {
+  @MessageMapping("logger.start.logs")
+  public void startLogs(Boolean bol) {
 
-        restTemplate.getForEntity("http://localhost:8085/start", String.class);
+    restTemplate.getForEntity("http://localhost:8085/start", String.class);
 
-    }
+  }
 
-    @MessageMapping("logger.provider.rate")
-    public void startLogs(Integer num) {
-        System.out.println("pasa por post");
-        restTemplate.postForEntity("http://localhost:8084/speed/" + num, null, String.class);
+  @MessageMapping("logger.provider.rate")
+  public void startLogs(Integer num) {
+    System.out.println("pasa por post");
+    restTemplate.postForEntity("http://localhost:8084/speed/" + num, null, String.class);
 
-    }
+  }
 }

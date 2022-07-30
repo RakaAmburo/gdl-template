@@ -6,7 +6,6 @@ plugins {
 
 group = 'com.template'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '18'
 
 configurations {
     compileOnly {
@@ -37,6 +36,7 @@ allprojects {
     }
 
     tasks.named('test') {
+        //noinspection GrUnresolvedAccess
         useJUnitPlatform()
     }
 
@@ -57,18 +57,23 @@ subprojects {
 
 tasks.register('1-runGateway') {
     group 'application'
+    //noinspection GrUnresolvedAccess
     dependsOn ':gateway:bootRun'
 }
+
 tasks.register('2-runCore') {
     group 'application'
+    //noinspection GrUnresolvedAccess
     dependsOn ':core:bootRun'
 }
 tasks.register('3-runProviders') {
     group 'application'
+    //noinspection GrUnresolvedAccess
     dependsOn ':providers:bootRun'
 }
 tasks.register('4-runLogger') {
     group 'application'
+    //noinspection GrUnresolvedAccess
     dependsOn ':logger:bootRun'
 }
 
