@@ -6,9 +6,10 @@ import lombok.Data;
 @Builder
 @Data
 public class Log {
-    private Long id;
-    private String type;
-    private String origin;
-    private String entry;
-    private Integer rate;
+
+  private Long id;
+  private String type;
+  private String origin;
+  private String entry;
+  private Integer rate;
 }

@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BankUser {
 
-    private Integer index;
-    private int id;
-    private String description;
+  private Integer index;
+  private int id;
+  private String description;
 
 }
