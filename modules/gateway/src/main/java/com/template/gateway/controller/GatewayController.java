@@ -11,10 +11,10 @@ import reactor.core.publisher.Flux;
 @Controller
 public class GatewayController {
 
-  private final FluxLogger<Long> fluxLogger;
+  private final FluxLogger<Log> fluxLogger;
 
   @Autowired
-  public GatewayController(FluxLogger<Long> fluxLogger) {
+  public GatewayController(FluxLogger<Log> fluxLogger) {
     this.fluxLogger = fluxLogger;
   }
 
@@ -22,9 +22,9 @@ public class GatewayController {
   public Flux<Log> gatewayLogger() {
 
     return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
-        .map(list -> Log.builder()
+        .map(logs -> Log.builder()
             .id(1L).origin("gateway")
-            .type("rate").rate(list.size()).build());
+            .type("rate").rate(logs.size()).build());
   }
 
 }

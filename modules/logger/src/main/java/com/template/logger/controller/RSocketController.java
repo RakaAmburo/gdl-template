@@ -1,23 +1,26 @@
 package com.template.logger.controller;
 
 import com.template.model.Log;
+import com.template.utils.FluxLogger;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
-import reactor.core.publisher.Sinks.Many;
 
 @Controller
 public class RSocketController {
 
-  public static final Many<Log> logs = Sinks.many().multicast().directBestEffort();
+  private final FluxLogger<Log> fluxLogger;
   private final RestTemplate restTemplate = new RestTemplate();
+
+  RSocketController(FluxLogger<Log> fluxLogger) {
+    this.fluxLogger = fluxLogger;
+  }
 
   @MessageMapping("logger.stream")
   public Flux<Log> responseStream() {
 
-    return logs.asFlux();
+    return fluxLogger.getFluxLog();
   }
 
   @MessageMapping("logger.start.flow")

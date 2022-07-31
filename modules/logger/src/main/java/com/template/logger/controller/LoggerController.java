@@ -1,9 +1,11 @@
 package com.template.logger.controller;
 
 import com.template.model.Log;
+import com.template.utils.FluxLogger;
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -12,13 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+@Slf4j
 @RestController
 public class LoggerController {
 
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
   @Autowired
   @Qualifier("coreLoggerRequester")
   private RSocketRequester coreRequester;
+
   @Autowired
   @Qualifier("providerLoggerRequester")
   private RSocketRequester providerRequester;
@@ -26,6 +31,9 @@ public class LoggerController {
   @Autowired
   @Qualifier("gatewayLoggerRequester")
   private RSocketRequester gatewayRequester;
+
+  @Autowired
+  private FluxLogger<Log> fluxLogger;
 
   @GetMapping("/start")
   public void start() {
@@ -47,9 +55,9 @@ public class LoggerController {
                 .subscribeOn(Schedulers.parallel()).subscribe();
           }
         })
-        .doOnNext(n -> {
-          RSocketController.logs.tryEmitNext(n);
-          System.out.println("Receibed from core: " + n.getId());
+        .doOnNext(logObj -> {
+          fluxLogger.emit(logObj);
+          log.info("Receibed from core: " + logObj.getId());
         }).subscribe();
   }
 
@@ -62,9 +70,9 @@ public class LoggerController {
                 .subscribeOn(Schedulers.parallel()).subscribe();
           }
         })
-        .doOnNext(n -> {
-          RSocketController.logs.tryEmitNext(n);
-          System.out.println("Receibed from provider: " + n.getId());
+        .doOnNext(logObj -> {
+          fluxLogger.emit(logObj);
+          log.info("Receibed from provider: " + logObj.getId());
         }).subscribe();
   }
 
@@ -77,9 +85,9 @@ public class LoggerController {
                 .subscribeOn(Schedulers.parallel()).subscribe();
           }
         })
-        .doOnNext(n -> {
-          RSocketController.logs.tryEmitNext(n);
-          System.out.println("Receibed from gateway: " + n.getId());
+        .doOnNext(logObj -> {
+          fluxLogger.emit(logObj);
+          log.info("Receibed from gateway: " + logObj.getId());
         }).subscribe();
   }
 

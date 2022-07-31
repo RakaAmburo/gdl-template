@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class BankUser {
 
   private Integer index;
-  private int id;
+  private String id;
   private String description;
 
 }

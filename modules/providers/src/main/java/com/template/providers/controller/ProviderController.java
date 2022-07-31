@@ -11,17 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
-import reactor.util.function.Tuple2;
 
 @Slf4j
 @Controller
 public class ProviderController {
 
-  private final FluxLogger<Long> fluxLogger;
+  private final FluxLogger<Log> fluxLogger;
   private final TimerContainer timerContainer;
 
   @Autowired
-  public ProviderController(FluxLogger<Long> fluxLogger, TimerContainer timerContainer) {
+  public ProviderController(FluxLogger<Log> fluxLogger, TimerContainer timerContainer) {
     this.fluxLogger = fluxLogger;
     this.timerContainer = timerContainer;
   }
@@ -32,22 +31,39 @@ public class ProviderController {
     Timer timer = timerContainer.createTimer(10);
 
     return timer.delayFlux(bankUserFlux)
-        .elapsed().doOnNext(it -> fluxLogger.emit(it.getT1()))
-        .map(Tuple2::getT2)
+        .doOnNext(user -> {
+          fluxLogger.emit(Log.builder().type("rate").build());
+          fluxLogger
+              .emit(Log.builder().type("logs").entry("logendo user: " + user.getId()).build());
+        })
         .doOnComplete(timer::stop);
   }
 
   @MessageMapping("provider.logger")
   public Flux<Log> playMovie() {
 
-    return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
+    Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
+    Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
+        .buffer(Duration.ofMillis(1000))
+        .map(list -> Log.builder().id(1L)
+            .type("rate")
+            .rate(list.size())
+            .build());
+    Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().equals("logs"));
+
+    return fluxLoggerLogs.mergeWith(fluxLoggerRate).map(log -> {
+      log.setOrigin("provider");
+      return log;
+    });
+
+    /*return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
         .map(list -> Log.builder().id(1L)
             .origin("provider")
             .type("rate")
             .rate(list.size())
-            .build())
-        .doOnNext(c -> log.info("LLENANDO PROVIDERS LOGS QUEUE"))
-        .onBackpressureDrop(droped -> log.info("DROPPED ELEMENT!!!!!!!!!!!"));
+            .build());*/
+    //.doOnNext(c -> log.info("LLENANDO PROVIDERS LOGS QUEUE"))
+    //.onBackpressureDrop(droped -> log.info("DROPPED ELEMENT!!!!!!!!!!!"));
   }
 
 }

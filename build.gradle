@@ -55,23 +55,25 @@ subprojects {
     }
 }
 
-tasks.register('1-runGateway') {
+tasks.register('1 runGateway') {
     group 'application'
     //noinspection GrUnresolvedAccess
     dependsOn ':gateway:bootRun'
 }
 
-tasks.register('2-runCore') {
+tasks.register('2 runCore') {
     group 'application'
     //noinspection GrUnresolvedAccess
     dependsOn ':core:bootRun'
 }
-tasks.register('3-runProviders') {
+
+tasks.register('3 runProviders') {
     group 'application'
     //noinspection GrUnresolvedAccess
     dependsOn ':providers:bootRun'
 }
-tasks.register('4-runLogger') {
+
+tasks.register('4 runLogger') {
     group 'application'
     //noinspection GrUnresolvedAccess
     dependsOn ':logger:bootRun'

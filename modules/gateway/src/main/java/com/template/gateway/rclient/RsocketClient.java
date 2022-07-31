@@ -1,10 +1,12 @@
 package com.template.gateway.rclient;
 
 import com.template.model.BankUser;
+import com.template.model.Log;
 import com.template.utils.FluxLogger;
 import io.rsocket.exceptions.ApplicationErrorException;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -14,18 +16,17 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
 
 @Slf4j
 @RestController
 public class RsocketClient {
 
   private final RSocketRequester rSocketRequester;
-  private final FluxLogger<Long> fluxLogger;
+  private final FluxLogger<Log> fluxLogger;
   private Disposable subcribed;
 
   @Autowired
-  public RsocketClient(RSocketRequester rSocketRequester, FluxLogger<Long> fluxLogger) {
+  public RsocketClient(RSocketRequester rSocketRequester, FluxLogger<Log> fluxLogger) {
     this.rSocketRequester = rSocketRequester;
     this.fluxLogger = fluxLogger;
   }
@@ -36,14 +37,14 @@ public class RsocketClient {
   }
 
   private void startFlow() {
-    Flux<Integer> bankUserId = Flux.generate((SynchronousSink<Integer> synchronousSink) ->
+    Flux<String> bankUserId = Flux.generate((SynchronousSink<Integer> synchronousSink) ->
         synchronousSink.next(Integer.MIN_VALUE)
-    )
+    ).map(oldId -> UUID.randomUUID().toString())
         .delayElements(Duration.ofMillis(10))
-        .elapsed()
-        .doOnNext(it -> fluxLogger.emit(it.getT1()))
-        .map(Tuple2::getT2)
-        .doOnNext(id -> log.info("Request userId to core: " + id));
+        .doOnNext(id -> {
+          fluxLogger.emit(Log.builder().build());
+          log.info("Request userId to core: " + id);
+        });
 
     Flux<BankUser> userProcessed = this.rSocketRequester
         .route("core.process").data(bankUserId)
