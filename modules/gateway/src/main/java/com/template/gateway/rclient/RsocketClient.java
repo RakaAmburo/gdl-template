@@ -42,7 +42,8 @@ public class RsocketClient {
     ).map(oldId -> UUID.randomUUID().toString())
         .delayElements(Duration.ofMillis(10))
         .doOnNext(id -> {
-          fluxLogger.emit(Log.builder().build());
+          fluxLogger.emit(Log.builder().type("rate").build());
+          fluxLogger.emit(Log.builder().type("logs").entry(id.toString()).build());
           log.info("Request userId to core: " + id);
         });
 

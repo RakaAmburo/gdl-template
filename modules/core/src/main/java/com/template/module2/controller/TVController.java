@@ -31,7 +31,10 @@ public class TVController {
         userId.map(id -> BankUser.builder().id(id).build())
             .doOnNext(user -> {
               log.info("enviando a providers, user: " + user.getIndex());
-              fluxLogger.emit(Log.builder().build());
+              fluxLogger.emit(Log.builder().type("rate").build());
+              fluxLogger.emit(
+                  Log.builder().type("logs").entry("Enviando a providers, user: " + user.getId())
+                      .build());
             });
 
     return this.rSocketRequester
@@ -42,12 +45,19 @@ public class TVController {
   @MessageMapping("core.logger")
   public Flux<Log> playMovie() {
 
-    return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
-        .map(logs -> Log.builder().id(1L)
-            .origin("core")
+    Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
+    Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
+        .buffer(Duration.ofMillis(1000))
+        .map(list -> Log.builder().id(1L)
             .type("rate")
-            .rate(logs.size())
+            .rate(list.size())
             .build());
+    Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().equals("logs"));
+
+    return fluxLoggerLogs.mergeWith(fluxLoggerRate).map(log -> {
+      log.setOrigin("core");
+      return log;
+    });
   }
 
 }

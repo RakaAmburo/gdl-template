@@ -21,10 +21,19 @@ public class GatewayController {
   @MessageMapping("gateway.logger")
   public Flux<Log> gatewayLogger() {
 
-    return fluxLogger.getFluxLog().buffer(Duration.ofMillis(1000))
-        .map(logs -> Log.builder()
-            .id(1L).origin("gateway")
-            .type("rate").rate(logs.size()).build());
+    Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
+    Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
+        .buffer(Duration.ofMillis(1000))
+        .map(list -> Log.builder().id(1L)
+            .type("rate")
+            .rate(list.size())
+            .build());
+    Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().equals("logs"));
+
+    return fluxLoggerLogs.mergeWith(fluxLoggerRate).map(log -> {
+      log.setOrigin("gateway");
+      return log;
+    });
   }
 
 }
