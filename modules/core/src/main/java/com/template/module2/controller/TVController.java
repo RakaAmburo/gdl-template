@@ -30,16 +30,18 @@ public class TVController {
     Flux<BankUser> bankUser =
         userId.map(id -> BankUser.builder().id(id).build())
             .doOnNext(user -> {
-              log.info("enviando a providers, user: " + user.getIndex());
+              //log.info("enviando a providers, user: " + user.getIndex());
               fluxLogger.emit(Log.builder().type("rate").build());
-              fluxLogger.emit(
-                  Log.builder().type("logs").entry("Enviando a providers, user: " + user.getId())
-                      .build());
+              fluxLogger.emit(Log.builder().type("logs.emitted").build());
             });
 
     return this.rSocketRequester
         .route("to.providers").data(bankUser).retrieveFlux(BankUser.class)
-        .doOnNext(user -> log.info("Receibed " + user.getIndex()));
+        .doOnNext(user -> {
+          //log.info("Receibed " + user.getIndex());
+          fluxLogger.emit(Log.builder().type("logs.received").build());
+        });
+
   }
 
   @MessageMapping("core.logger")
@@ -47,12 +49,21 @@ public class TVController {
 
     Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
     Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
-        .buffer(Duration.ofMillis(1000))
+        .buffer(Duration.ofMillis(1197))
         .map(list -> Log.builder().id(1L)
             .type("rate")
             .rate(list.size())
             .build());
-    Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().equals("logs"));
+    Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().startsWith("logs"))
+        .buffer(Duration.ofMillis(989))
+        .map(list -> {
+          long emitted = list.stream().filter(log -> log.getType().contains("emitted")).count();
+          long received = list.stream().filter(log -> log.getType().contains("received")).count();
+          return Log.builder().id(1L)
+              .type("logs")
+              .entry("emitted: " + emitted + ", received: " + received)
+              .build();
+        });
 
     return fluxLoggerLogs.mergeWith(fluxLoggerRate).map(log -> {
       log.setOrigin("core");

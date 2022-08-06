@@ -43,8 +43,8 @@ public class RsocketClient {
         .delayElements(Duration.ofMillis(10))
         .doOnNext(id -> {
           fluxLogger.emit(Log.builder().type("rate").build());
-          fluxLogger.emit(Log.builder().type("logs").entry(id.toString()).build());
-          log.info("Request userId to core: " + id);
+          fluxLogger.emit(Log.builder().type("logs.emitted").build());
+          //log.info("Request userId to core: " + id);
         });
 
     Flux<BankUser> userProcessed = this.rSocketRequester
@@ -59,8 +59,10 @@ public class RsocketClient {
             }).subscribeOn(Schedulers.parallel()).subscribe();
           }
         })
-        .doOnNext(processedUser ->
-            log.info("Processed user from core: " + processedUser.getIndex())
+        .doOnNext(processedUser -> {
+              fluxLogger.emit(Log.builder().type("logs.received").build());
+              //log.info("Processed user from core: " + processedUser.getIndex());
+            }
         );
 
     subcribed = userProcessed.subscribe();

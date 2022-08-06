@@ -57,7 +57,7 @@ public class LoggerController {
         })
         .doOnNext(logObj -> {
           fluxLogger.emit(logObj);
-          log.info("Receibed from core: " + logObj.getId());
+          //log.info("Receibed from core: " + logObj.getId());
         }).subscribe();
   }
 
@@ -72,7 +72,7 @@ public class LoggerController {
         })
         .doOnNext(logObj -> {
           fluxLogger.emit(logObj);
-          log.info("Receibed from provider: " + logObj.getId());
+          //log.info("Receibed from provider: " + logObj.getId());
         }).subscribe();
   }
 
@@ -87,7 +87,7 @@ public class LoggerController {
         })
         .doOnNext(logObj -> {
           fluxLogger.emit(logObj);
-          log.info("Receibed from gateway: " + logObj.getId());
+          //log.info("Receibed from gateway: " + logObj.getId());
         }).subscribe();
   }
 
