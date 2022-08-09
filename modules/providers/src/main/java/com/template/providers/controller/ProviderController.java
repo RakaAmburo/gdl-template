@@ -25,8 +25,8 @@ public class ProviderController {
     this.timerContainer = timerContainer;
   }
 
-  @MessageMapping("to.providers")
-  public Flux<BankUser> playMovie(Flux<BankUser> bankUserFlux) {
+  @MessageMapping("providers.process")
+  public Flux<BankUser> providerProcess(Flux<BankUser> bankUserFlux) {
 
     Timer timer = timerContainer.createTimer(10);
 
@@ -39,7 +39,7 @@ public class ProviderController {
   }
 
   @MessageMapping("provider.logger")
-  public Flux<Log> playMovie() {
+  public Flux<Log> providerLogger() {
 
     Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
     Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
@@ -51,7 +51,7 @@ public class ProviderController {
     Flux<Log> fluxLoggerLogs = fluxLoggerParent.filter(user -> user.getType().startsWith("logs"))
         .buffer(Duration.ofMillis(971))
         .map(list -> {
-          long emitted = list.stream().filter(log -> log.getType().contains("emitted")).count();
+          //long emitted = list.stream().filter(log -> log.getType().contains("emitted")).count();
           long received = list.stream().filter(log -> log.getType().contains("received")).count();
           return Log.builder().id(1L)
               .type("logs")

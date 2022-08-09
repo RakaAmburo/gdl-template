@@ -1,4 +1,4 @@
-package com.template.module2;
+package com.template.core;
 
 import com.template.model.User;
 import org.springframework.web.bind.annotation.GetMapping;

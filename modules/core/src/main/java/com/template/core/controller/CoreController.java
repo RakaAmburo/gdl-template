@@ -1,4 +1,4 @@
-package com.template.module2.controller;
+package com.template.core.controller;
 
 import com.template.model.BankUser;
 import com.template.model.Log;
@@ -13,19 +13,19 @@ import reactor.core.publisher.Flux;
 
 @Slf4j
 @Controller
-public class TVController {
+public class CoreController {
 
   private final FluxLogger<Log> fluxLogger;
   private final RSocketRequester rSocketRequester;
 
   @Autowired
-  public TVController(RSocketRequester rSocketRequester, FluxLogger<Log> fluxLogger) {
+  public CoreController(RSocketRequester rSocketRequester, FluxLogger<Log> fluxLogger) {
     this.rSocketRequester = rSocketRequester;
     this.fluxLogger = fluxLogger;
   }
 
   @MessageMapping("core.process")
-  public Flux<BankUser> playMovie(Flux<String> userId) {
+  public Flux<BankUser> coreProcess(Flux<String> userId) {
 
     Flux<BankUser> bankUser =
         userId.map(id -> BankUser.builder().id(id).build())
@@ -36,7 +36,7 @@ public class TVController {
             });
 
     return this.rSocketRequester
-        .route("to.providers").data(bankUser).retrieveFlux(BankUser.class)
+        .route("providers.process").data(bankUser).retrieveFlux(BankUser.class)
         .doOnNext(user -> {
           //log.info("Receibed " + user.getIndex());
           fluxLogger.emit(Log.builder().type("logs.received").build());
@@ -45,11 +45,11 @@ public class TVController {
   }
 
   @MessageMapping("core.logger")
-  public Flux<Log> playMovie() {
+  public Flux<Log> coreLogger() {
 
     Flux<Log> fluxLoggerParent = fluxLogger.getFluxLog();
     Flux<Log> fluxLoggerRate = fluxLoggerParent.filter(user -> "rate".equals(user.getType()))
-        .buffer(Duration.ofMillis(1197))
+        .buffer(Duration.ofMillis(1127))
         .map(list -> Log.builder().id(1L)
             .type("rate")
             .rate(list.size())

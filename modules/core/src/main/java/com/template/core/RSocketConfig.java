@@ -1,4 +1,4 @@
-package com.template.module2;
+package com.template.core;
 
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import java.time.Duration;

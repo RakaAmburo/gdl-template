@@ -1,4 +1,4 @@
-package com.template.gateway.rclient;
+package com.template.gateway.rsocketclient;
 
 import com.template.model.BankUser;
 import com.template.model.Log;
