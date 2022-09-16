@@ -20,7 +20,9 @@ public class RSocketController {
   @MessageMapping("logger.stream")
   public Flux<Log> responseStream() {
 
-    return fluxLogger.getFluxLog();
+    return fluxLogger.getFluxLog().onBackpressureDrop(onDropped -> {
+      System.out.println(onDropped.getType());
+    });
   }
 
   @MessageMapping("logger.start.flow")
@@ -39,7 +41,6 @@ public class RSocketController {
 
   @MessageMapping("logger.provider.rate")
   public void startLogs(Integer num) {
-    System.out.println("pasa por post");
     restTemplate.postForEntity("http://localhost:8084/speed/" + num, null, String.class);
 
   }
