@@ -14,13 +14,13 @@ import reactor.core.publisher.Flux;
 
 @Slf4j
 @Controller
-public class ProviderController {
+public class RSocketProviderController {
 
   private final FluxLogger<Log> fluxLogger;
   private final TimerContainer timerContainer;
 
   @Autowired
-  public ProviderController(FluxLogger<Log> fluxLogger, TimerContainer timerContainer) {
+  public RSocketProviderController(FluxLogger<Log> fluxLogger, TimerContainer timerContainer) {
     this.fluxLogger = fluxLogger;
     this.timerContainer = timerContainer;
   }
@@ -30,6 +30,7 @@ public class ProviderController {
 
     Timer timer = timerContainer.createTimer(10);
 
+    //return bankUserFlux
     return timer.delayFlux(bankUserFlux)
         .doOnNext(user -> {
           fluxLogger.emit(Log.builder().type("rate").build());
@@ -55,7 +56,7 @@ public class ProviderController {
           long received = list.stream().filter(log -> log.getType().contains("received")).count();
           return Log.builder().id(1L)
               .type("logs")
-              .entry("received: " + received)
+              .entry("proccesed & returned: " + received)
               .build();
         });
 

@@ -10,12 +10,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 @Controller
-public class GatewayController {
+public class RSocketGatewayController {
 
   private final FluxLogger<Log> fluxLogger;
 
   @Autowired
-  public GatewayController(FluxLogger<Log> fluxLogger) {
+  public RSocketGatewayController(FluxLogger<Log> fluxLogger) {
     this.fluxLogger = fluxLogger;
   }
 

@@ -16,7 +16,7 @@ import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @RestController
-public class LoggerController {
+public class StartHttpcontrollers {
 
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 

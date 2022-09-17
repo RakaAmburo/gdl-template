@@ -13,13 +13,13 @@ import reactor.core.publisher.Flux;
 
 @Slf4j
 @Controller
-public class CoreController {
+public class RSocketCoreController {
 
   private final FluxLogger<Log> fluxLogger;
   private final RSocketRequester rSocketRequester;
 
   @Autowired
-  public CoreController(RSocketRequester rSocketRequester, FluxLogger<Log> fluxLogger) {
+  public RSocketCoreController(RSocketRequester rSocketRequester, FluxLogger<Log> fluxLogger) {
     this.rSocketRequester = rSocketRequester;
     this.fluxLogger = fluxLogger;
   }
@@ -58,7 +58,8 @@ public class CoreController {
         .buffer(Duration.ofMillis(989))
         .map(list -> {
           long emitted = list.stream().filter(log -> log.getType().contains("emitted")).count();
-          long received = list.stream().filter(log -> log.getType().contains("received")).count();
+          long received =
+              list.stream().filter(log -> log.getType().contains("received")).count();
           return Log.builder().id(1L)
               .type("logs")
               .entry("emitted: " + emitted + ", received: " + received)

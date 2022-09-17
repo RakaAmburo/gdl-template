@@ -21,7 +21,7 @@ public class RSocketController {
   public Flux<Log> responseStream() {
 
     return fluxLogger.getFluxLog().onBackpressureDrop(onDropped -> {
-      System.out.println(onDropped.getType());
+      System.out.println("Dropping log type: " + onDropped.getType());
     });
   }
 

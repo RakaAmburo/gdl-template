@@ -47,7 +47,7 @@ public class RsocketClient {
           }
         }*/
     ).map(oldId -> {
-      System.out.println(counter.incrementAndGet());
+      //System.out.println(counter.incrementAndGet());
       return UUID.randomUUID().toString();
     })
         .delayElements(Duration.ofMillis(10))
@@ -56,14 +56,14 @@ public class RsocketClient {
           fluxLogger.emit(Log.builder().type("logs.emitted").build());
           //log.info("Request userId to core: " + id);
         })
-        //.limitRate(100)
-        .onBackpressureDrop(dropped -> {
+        //.limitRate(10)
+        /*.onBackpressureDrop(dropped -> {
           int c = counter.intValue();
           if (c != 0) {
             //System.out.println("Dropping on count: " + counter.get());
             counter.set(0);
           }
-        });
+        })*/;
 
     Flux<BankUser> userProcessed = this.rSocketRequester
         .route("core.process").data(bankUserId)
