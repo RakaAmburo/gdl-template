@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="ie=edge" http-equiv="X-UA-Compatible">
+  <title>RSocket Demo</title>
+
+  <link crossorigin="anonymous"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+        integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I"
+        rel="stylesheet">
+  <script crossorigin="anonymous"
+          integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/"
+          src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"></script>
+</head>
+<script src="/app.js"></script>
+</head>
+<body>
+<div class="container mt-3" style="text-align: center">
+  <h1>RSocket Demo</h1>
+  <div class="row">
+    <div class="col">
+
+    </div>
+  </div>
+</div>
+
+<div class="container mt-3" style="width: 800px; border: solid 1px #888;;">
+  <div class="row">
+    <div class="col-sm-12" style="text-align: center; margin-top: 5px;">
+      <strong>Items per second (Rate):</strong>
+      <button class="btn btn-secondary btn-sm" id="startLogs">Start Logging</button>
+    </div>
+  </div>
+  <div class="row" style="text-align: center">
+    <div class="col-sm">
+      Gateway:
+    </div>
+    <div class="col-sm">
+      Core:
+    </div>
+    <div class="col-sm">
+      Providers:
+    </div>
+  </div>
+  <div class="row" style="text-align: center">
+    <div class="col-sm">
+      <ul id="gateway"></ul>
+    </div>
+    <div class="col-sm">
+      <ul id="core"></ul>
+    </div>
+    <div class="col-sm">
+      <ul id="provider"></ul>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-3" style="width: 800px;">
+  <div class="row">
+    <div class="col-sm">
+      <textarea cols="60" id="gatewayLog" name="w3review" rows="4"></textarea>
+    </div>
+    <div class="col-sm" style="text-align: center; border: solid 1px #888;">
+      <div class="row" style="text-align: center">
+        <ul>GATEWAY</ul>
+      </div>
+      <div class="row">
+        <div>
+          <button class="btn btn-secondary btn-sm" id="startFlow">Start users input</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col-sm">
+      <textarea cols="60" id="coreLog" name="w3review" rows="4"></textarea>
+    </div>
+    <div class="col-sm" style="text-align: center ; border: solid 1px #888;">
+      CORE
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col-sm">
+      <textarea cols="60" id="providerLog" name="w3review" rows="4"></textarea>
+    </div>
+    <div class="col-sm" style="text-align: center; border: solid 1px #888; ">
+      <div class="row">
+        <ul>PROVIDERS</ul>
+      </div>
+      <div class="row  mt-2" style="text-align: center">
+        <div class="input-group mb-3">
+          &nbsp; &nbsp;&nbsp;Delay: &nbsp;
+          <input id="prdn" readonly size="1" style="width: 50px;" type="text" value="10">
+          &nbsp;&nbsp;
+          <div class="input-group-append">
+            <button class="btn btn-secondary btn-sm" id="prdp" style="width: 50px;">+5</button>
+            &nbsp;
+            <button class="btn btn-secondary btn-sm" id="prdm" style="width: 50px;">-5</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script crossorigin="anonymous">
+        function startFlow() {
+            const Http = new XMLHttpRequest();
+            const url = 'http://localhost:8080/start';
+            Http.open("GET", url);
+            Http.setRequestHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+            Http.setRequestHeader("Access-Control-Allow-Methods", "GET, POST");
+            Http.setRequestHeader("Access-Control-Max-Age", "1728000");
+            Http.setRequestHeader("Access-Control-Allow-Origin", "http://localhost:8081");
+            Http.send();
+        }
+
+        var counter = 0;
+        function appendLog(textArea, log) {
+            let lines = textArea.value.split('\n');
+            lines.push(log);
+            if (lines.length > 5) {
+                lines.shift();
+            }
+            textArea.value = lines.join('\n')
+        }
+
+
+
+
+
+</script>
+</body>
+
+</html>
